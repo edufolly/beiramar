@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 // https://github.com/dart-lang/dart-docker/
+// https://docs.docker.com/engine/api/v1.41/#tag/System/operation/SystemEvents
 ///
 ///
 ///
@@ -16,8 +17,12 @@ void main(List<String> arguments) async {
   Socket socket = await Socket.connect(host, 0);
 
   ProcessSignal.sigint.watch().listen((dynamic event) => socket.close());
+  
+  // TODO: Check if is HTTP header or JSON object.
   bool first = true;
+
   socket.listen(
+    // TODO: More than one message in one event.
     (Uint8List event) {
       if (first) {
         first = false;
@@ -30,17 +35,18 @@ void main(List<String> arguments) async {
 
       print('------');
       if (event.length > 5) {
+        // TODO: Ignore first line. [49, x , y, 13, 10]
         print(event.sublist(0, 5));
-        String body = String.fromCharCodes(event.sublist(5)).trim();
+        String body = String.fromCharCodes(event.sublist(5));
         print(body);
         print('Length: ${body.length}');
 
-        Map<String, dynamic> map = json.decode(body);
+        Map<String, dynamic> map = json.decode(body.trim());
         print(map);
       } else {
         print(event);
       }
-      print('||||||');
+      print('------\n\n');
     },
     onError: (dynamic e, StackTrace s) {
       print('onError: $e');
